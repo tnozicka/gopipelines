@@ -1,0 +1,32 @@
+---
+kind: ImageStream
+apiVersion: v1
+metadata:
+  name: hellouniverse
+  labels:
+    app: hellouniverse
+---
+kind: BuildConfig
+apiVersion: v1
+metadata:
+  name: hellouniverse
+  labels:
+    app: hellouniverse
+spec:
+  strategy:
+    type: Source
+    sourceStrategy:
+      from:
+        kind: DockerImage
+        name: docker.io/tnozicka/s2i-centos7-golang
+      forcePull: false
+      env:
+      - name: APP_URI
+        value: github.com/tnozicka/gopipelines
+  source:
+    type: Binary
+  output:
+    to:
+      kind: ImageStreamTag
+      name: hellouniverse:latest
+      namespace: ""

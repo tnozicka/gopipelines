@@ -1,0 +1,10 @@
+hash: 892c34bc2ac3ff7a5c297c5e3f9a289025c8beded46bc3aa0fdca2d63a7783aa
+updated: 2017-01-25T11:21:59.35246472+01:00
+imports:
+- name: github.com/go-playground/ansi
+  version: 41f9c1a7ac8bfa9c454fa4ccec9d877a01437484
+- name: github.com/go-playground/log
+  version: 0a8ae2857870802d52e9d3bf3581dba1391e6725
+  subpackages:
+  - handlers/console
+testImports: []

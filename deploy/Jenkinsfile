@@ -1,0 +1,45 @@
+#!/usr/bin/groovy
+node ('master') {
+    stage ('Prepare') {
+        checkout scm
+        sh 'oc login https://kubernetes.default/ --token=$(< /var/run/secrets/kubernetes.io/serviceaccount/token) --certificate-authority=/run/secrets/kubernetes.io/serviceaccount/ca.crt'
+
+        // Prepare the deployments so you can see pipeline in console overview when running for the first time
+        sh 'oc process -f deploy/deployment-template.yaml -v "APP_NAME=hellouniverse-dev" -v REPLICAS=1 | oc apply -f -'
+        sh 'oc process -f deploy/deployment-template.yaml -v "APP_NAME=hellouniverse-prod" -v REPLICAS=3 | oc apply -f -'
+        // Prepare BC and IS
+        sh 'oc apply -f deploy/build-template.yaml'
+    }
+    
+    def image_ref
+    stage ('Create Image') {
+        sh 'oc start-build hellouniverse --from-repo=. --follow --wait'
+        // "oc start-build" should provide us with image_ref, but let's hack it for now
+        sh 'oc get is hellouniverse -o go-template --template=\'{{range .status.tags}}{{if eq .tag "latest"}}{{(index .items 0).dockerImageReference}}{{end}}{{end}}\' | tee /tmp/pipeline-image_ref'
+        image_ref = readFile '/tmp/pipeline-image_ref'
+    }
+
+//    We are doing tests as part of S2I build but you could run it here
+//    stage ('Integration Tests') {
+//    }
+
+    stage ('Deploy to dev') {
+        sh "oc set image --source=docker dc/hellouniverse-dev hellouniverse=${image_ref}"
+        sh 'oc rollout resume dc/hellouniverse-dev'
+        sh 'oc rollout pause dc/hellouniverse-dev'
+        sh 'oc logs --follow dc/hellouniverse-dev'
+        sh 'oc rollout status dc/hellouniverse-dev'
+    }
+
+    stage ('Wait for approval') {
+        input "Deploy to production?"
+    }
+
+    stage ('Deploy to prod') {
+        sh "oc set image --source=docker dc/hellouniverse-prod hellouniverse=${image_ref}"
+        sh 'oc rollout resume dc/hellouniverse-prod'
+        sh 'oc rollout pause dc/hellouniverse-prod'
+        sh 'oc logs --follow dc/hellouniverse-prod'
+        sh 'oc rollout status dc/hellouniverse-prod'
+    }
+}

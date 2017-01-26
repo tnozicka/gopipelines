@@ -1,0 +1,6 @@
+= Usage
+[source,bash]
+----
+oc process -f pipeline-template.yaml --param GIT_URL=https://github.com/tnozicka/gopipeline.git --param GIT_REF=master --param GITHUB_WEBHOOK_SECRET=<secret> | oc apply -f -
+oc start-build hellouniverse-pipeline
+----
