@@ -16,7 +16,7 @@ import (
 
 func handleRoot(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "Hello Universe!")
+	fmt.Fprint(w, "Hello DevConf2017!")
 }
 
 func mainWithStatus() int {
